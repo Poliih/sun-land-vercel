@@ -387,7 +387,7 @@ export default function CheckinForm() {
             rows={4}
             value={formData.observacoes}
             onChange={(e) => handleChange('root', 'observacoes', e.target.value)}
-            className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none resize-none transition-all placeholder-gray-400"
+            className="w-full bg-gray-50 text-gray-900 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none resize-none transition-all placeholder-gray-400"
             placeholder="Digite qualquer informação adicional importante sobre a família..."
           />
         </section>
