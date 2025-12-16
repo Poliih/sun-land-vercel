@@ -17,7 +17,8 @@ import {
   faCamera,
   faClipboardList,
   faBriefcase,
-  faGraduationCap
+  faGraduationCap,
+  faTimes 
 } from '@fortawesome/free-solid-svg-icons'
 
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -28,6 +29,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY! 
 )
+
 
 const InputGroup = ({ label, type = "text", value, onChange, placeholder = "" }: any) => (
   <div className="flex flex-col group animate-fadeIn w-full">
@@ -86,6 +88,7 @@ const SectionHeader = ({ icon, title, colorClass }: any) => (
   </div>
 )
 
+
 export default function CheckinForm() {
   const [loading, setLoading] = useState(false)
   
@@ -104,6 +107,17 @@ export default function CheckinForm() {
       ...formData,
       filhos: [...formData.filhos, { nome: '', nasc: '', idade: '', mora: false, estuda: false, serie: '', documento: false }]
     })
+  }
+
+  const removeFilho = (indexToRemove: number) => {
+    const novosFilhos = formData.filhos.filter((_, index) => index !== indexToRemove)
+    setFormData({ ...formData, filhos: novosFilhos })
+  }
+
+  const removeFoto = (e: any) => {
+    e.preventDefault() 
+    e.stopPropagation() 
+    setFotoCasa(null)
   }
 
   const handleChange = (section: string, field: string, value: any, index?: number) => {
@@ -309,21 +323,45 @@ export default function CheckinForm() {
             </div>
           </div>
           
-          <div className="mt-6 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300 text-center hover:bg-gray-100 transition-colors">
-            <label className="cursor-pointer block">
-              <span className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Foto da Fachada da Casa</span>
-              <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-200">
-                 <FontAwesomeIcon icon={faCamera} className="text-gray-400 text-xl" />
+          <div className="mt-6">
+            {!fotoCasa ? (
+              <div className="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300 text-center hover:bg-gray-100 transition-colors">
+                <label className="cursor-pointer block">
+                  <span className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Foto da Fachada da Casa</span>
+                  <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-200">
+                     <FontAwesomeIcon icon={faCamera} className="text-gray-400 text-xl" />
+                  </div>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => setFotoCasa(e.target.files?.[0] || null)} 
+                    className="hidden" 
+                  />
+                  <span className="text-emerald-600 font-bold hover:underline">Clique para enviar foto</span>
+                  <p className="text-xs text-gray-400 mt-1">Nenhum arquivo selecionado</p>
+                </label>
               </div>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={(e) => setFotoCasa(e.target.files?.[0] || null)} 
-                className="hidden" 
-              />
-              <span className="text-emerald-600 font-bold hover:underline">Clique para enviar foto</span>
-              <p className="text-xs text-gray-400 mt-1">{fotoCasa ? `Arquivo selecionado: ${fotoCasa.name}` : 'Nenhum arquivo selecionado'}</p>
-            </label>
+            ) : (
+              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between relative">
+                 <div className="flex items-center gap-3">
+                    <div className="bg-emerald-100 text-emerald-600 w-10 h-10 rounded-full flex items-center justify-center">
+                       <FontAwesomeIcon icon={faCamera} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-emerald-800">Foto Selecionada</p>
+                      <p className="text-xs text-emerald-600 truncate max-w-[200px]">{fotoCasa.name}</p>
+                    </div>
+                 </div>
+                 <button 
+                   type="button" 
+                   onClick={removeFoto} 
+                   className="bg-white text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-colors border border-red-100"
+                   title="Remover foto"
+                 >
+                   <FontAwesomeIcon icon={faTimes} />
+                 </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -352,9 +390,20 @@ export default function CheckinForm() {
           <div className="space-y-6">
             {formData.filhos.map((filho, index) => (
               <div key={index} className="p-5 bg-gray-50 rounded-xl border border-gray-200 relative group hover:border-amber-200 transition-colors">
+                
                 <div className="absolute -top-3 left-4 text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200 shadow-sm uppercase tracking-wide">
                   Filho #{index + 1}
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeFilho(index)}
+                  className="absolute -top-3 right-4 bg-red-50 text-red-500 border border-red-200 hover:bg-red-500 hover:text-white px-2 py-1 rounded-full shadow-sm transition-all text-xs flex items-center gap-1"
+                  title="Remover este filho"
+                >
+                  <FontAwesomeIcon icon={faTimes} /> Remover
+                </button>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-3 mb-4">
                    <InputGroup label="Nome Completo" value={filho.nome} onChange={(v:any) => handleChange('filhos', 'nome', v, index)} />
                    <div className="grid grid-cols-2 gap-3">
