@@ -18,7 +18,8 @@ import {
   faClipboardList,
   faBriefcase,
   faGraduationCap,
-  faTimes 
+  faTimes,
+  faMapMarkerAlt 
 } from '@fortawesome/free-solid-svg-icons'
 
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -29,7 +30,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY! 
 )
-
 
 const InputGroup = ({ label, type = "text", value, onChange, placeholder = "" }: any) => (
   <div className="flex flex-col group animate-fadeIn w-full">
@@ -93,8 +93,8 @@ export default function CheckinForm() {
   const [loading, setLoading] = useState(false)
   
   const [formData, setFormData] = useState({
-    pai: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: false, trabalha: false, profissao: '', renda: '' },
-    mae: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: false, trabalha: false, profissao: '', renda: '' },
+    pai: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: true, endereco_extra: '', trabalha: false, profissao: '', renda: '' },
+    mae: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: true, endereco_extra: '', trabalha: false, profissao: '', renda: '' },
     endereco: { rua: '', numero: '', complemento: '', bairro: '', referencia: '', tipo_moradia: 'Própria' },
     filhos: [] as any[], 
     observacoes: ''
@@ -105,7 +105,7 @@ export default function CheckinForm() {
   const addFilho = () => {
     setFormData({
       ...formData,
-      filhos: [...formData.filhos, { nome: '', nasc: '', idade: '', mora: false, estuda: false, serie: '', documento: false }]
+      filhos: [...formData.filhos, { nome: '', nasc: '', idade: '', mora: true, estuda: false, serie: '', documento: false }]
     })
   }
 
@@ -159,6 +159,7 @@ export default function CheckinForm() {
         pai_telefone: formData.pai.telefone,
         pai_conjugal: formData.pai.conjugal,
         pai_mora: formData.pai.mora,
+        pai_endereco: !formData.pai.mora ? formData.pai.endereco_extra : null,
         pai_trabalha: formData.pai.trabalha,
         pai_profissao: formData.pai.trabalha ? formData.pai.profissao : null, 
         pai_renda: (formData.pai.trabalha && formData.pai.renda) ? parseFloat(formData.pai.renda) : null,
@@ -169,6 +170,8 @@ export default function CheckinForm() {
         mae_telefone: formData.mae.telefone,
         mae_conjugal: formData.mae.conjugal,
         mae_mora: formData.mae.mora,
+        // LÓGICA: Se não mora, salva o endereço extra. Se mora, salva NULL.
+        mae_endereco: !formData.mae.mora ? formData.mae.endereco_extra : null,
         mae_trabalha: formData.mae.trabalha,
         mae_profissao: formData.mae.trabalha ? formData.mae.profissao : null,
         mae_renda: (formData.mae.trabalha && formData.mae.renda) ? parseFloat(formData.mae.renda) : null,
@@ -253,9 +256,24 @@ export default function CheckinForm() {
 
           <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-4">
-               <CheckboxGroup label="Mora na residência?" checked={formData.pai.mora} onChange={(v:any) => handleChange('pai', 'mora', v)} />
+               <CheckboxGroup label="Mora na residência (com a criança)?" checked={formData.pai.mora} onChange={(v:any) => handleChange('pai', 'mora', v)} />
                <CheckboxGroup label="Possui trabalho?" icon={faBriefcase} checked={formData.pai.trabalha} onChange={(v:any) => handleChange('pai', 'trabalha', v)} />
             </div>
+
+            {!formData.pai.mora && (
+               <div className="animate-pulse-once border-t border-indigo-100 pt-4 md:border-t-0 md:pt-0">
+                  <div className="flex items-center gap-2 mb-2 text-indigo-700 text-sm font-bold">
+                     <FontAwesomeIcon icon={faMapMarkerAlt} />
+                     <span>Endereço Atual do Pai</span>
+                  </div>
+                  <InputGroup 
+                    label="Endereço Completo (Rua, Nº, Bairro)" 
+                    value={formData.pai.endereco_extra} 
+                    onChange={(v:any) => handleChange('pai', 'endereco_extra', v)} 
+                    placeholder="Ex: Rua A, 123, Centro" 
+                  />
+               </div>
+            )}
 
             {formData.pai.trabalha && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse-once border-t border-indigo-100 pt-4 md:border-t-0 md:pt-0">
@@ -287,9 +305,24 @@ export default function CheckinForm() {
 
           <div className="bg-pink-50/50 p-4 rounded-xl border border-pink-100 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-4">
-               <CheckboxGroup label="Mora na residência?" checked={formData.mae.mora} onChange={(v:any) => handleChange('mae', 'mora', v)} />
+               <CheckboxGroup label="Mora na residência (com a criança)?" checked={formData.mae.mora} onChange={(v:any) => handleChange('mae', 'mora', v)} />
                <CheckboxGroup label="Possui trabalho?" icon={faBriefcase} checked={formData.mae.trabalha} onChange={(v:any) => handleChange('mae', 'trabalha', v)} />
             </div>
+
+            {!formData.mae.mora && (
+               <div className="animate-pulse-once border-t border-pink-100 pt-4 md:border-t-0 md:pt-0">
+                  <div className="flex items-center gap-2 mb-2 text-pink-700 text-sm font-bold">
+                     <FontAwesomeIcon icon={faMapMarkerAlt} />
+                     <span>Endereço Atual da Mãe</span>
+                  </div>
+                  <InputGroup 
+                    label="Endereço Completo (Rua, Nº, Bairro)" 
+                    value={formData.mae.endereco_extra} 
+                    onChange={(v:any) => handleChange('mae', 'endereco_extra', v)} 
+                    placeholder="Ex: Rua B, 456, Centro" 
+                  />
+               </div>
+            )}
 
             {formData.mae.trabalha && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-pink-100 pt-4 md:border-t-0 md:pt-0">
