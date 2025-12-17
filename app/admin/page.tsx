@@ -509,7 +509,7 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-end mb-6">
            <div><h2 className="text-2xl font-bold text-gray-800">Cadastros</h2><p className="text-gray-500 text-sm">Total encontrado: {filteredFamilias.length}</p></div>
-           <button onClick={fetchData} className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg"><FontAwesomeIcon icon={faFilter} /></button>
+           {/* <button onClick={fetchData} className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg"><FontAwesomeIcon icon={faFilter} /></button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
