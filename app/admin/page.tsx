@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid' 
 import { useRouter } from 'next/navigation'
 import Swal from 'sweetalert2'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -22,7 +23,8 @@ import {
   faPlus,
   faBriefcase,
   faGraduationCap,
-  faSave
+  faSave,
+  faCamera 
 } from '@fortawesome/free-solid-svg-icons'
 
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -55,6 +57,10 @@ const CheckboxGroup = ({ label, checked, onChange, icon = null }: any) => (
 const EditModal = ({ familia, onClose, onUpdate }: any) => {
   const [loading, setLoading] = useState(false)
   
+  const [novaFoto, setNovaFoto] = useState<File | null>(null)
+  
+  const [fotoAtualUrl, setFotoAtualUrl] = useState(familia.foto_casa_url || '')
+
   const [formData, setFormData] = useState({
     pai: { 
       nome: familia.pai_nome || '', nasc: familia.pai_nasc || '', idade: familia.pai_idade || '', telefone: familia.pai_telefone || '', 
@@ -94,10 +100,40 @@ const EditModal = ({ familia, onClose, onUpdate }: any) => {
     setFormData({ ...formData, filhos: formData.filhos.filter((_: any, i: number) => i !== index) })
   }
 
+  const handlePhotoChange = (e: any) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setNovaFoto(file)
+      setFotoAtualUrl(URL.createObjectURL(file))
+    }
+  }
+
+  const removePhoto = () => {
+    setNovaFoto(null)
+    setFotoAtualUrl('')
+  }
+
   const handleUpdate = async (e: any) => {
     e.preventDefault()
     setLoading(true)
     try {
+      let finalFotoUrl = familia.foto_casa_url 
+
+      if (!fotoAtualUrl && !novaFoto) {
+         finalFotoUrl = null
+      }
+
+      if (novaFoto) {
+        const fileExt = novaFoto.name.split('.').pop()
+        const fileName = `casa-${uuidv4()}.${fileExt}`
+        const { error: uploadError } = await supabase.storage.from('fotos-checkin').upload(fileName, novaFoto)
+        
+        if (uploadError) throw uploadError
+        
+        const { data } = supabase.storage.from('fotos-checkin').getPublicUrl(fileName)
+        finalFotoUrl = data.publicUrl
+      }
+
       const { error } = await supabase.from('checkin_familia').update({
         pai_nome: formData.pai.nome, pai_nasc: formData.pai.nasc || null, pai_idade: formData.pai.idade ? parseInt(String(formData.pai.idade)) : null,
         pai_telefone: formData.pai.telefone, pai_conjugal: formData.pai.conjugal, pai_mora: formData.pai.mora,
@@ -112,6 +148,8 @@ const EditModal = ({ familia, onClose, onUpdate }: any) => {
         rua: formData.endereco.rua, numero: formData.endereco.numero, complemento: formData.endereco.complemento,
         bairro: formData.endereco.bairro, referencia: formData.endereco.referencia, tipo_moradia: formData.endereco.tipo_moradia,
         
+        foto_casa_url: finalFotoUrl,
+
         filhos: formData.filhos, observacoes: formData.observacoes
       }).eq('id', familia.id)
 
@@ -121,7 +159,8 @@ const EditModal = ({ familia, onClose, onUpdate }: any) => {
       onUpdate() 
       onClose() 
     } catch (error: any) {
-      Swal.fire('Erro', error.message, 'error')
+      console.error(error)
+      Swal.fire('Erro', error.message || 'Erro ao atualizar', 'error')
     } finally {
       setLoading(false)
     }
@@ -136,6 +175,40 @@ const EditModal = ({ familia, onClose, onUpdate }: any) => {
         </div>
         
         <form onSubmit={handleUpdate} className="p-6 space-y-6">
+          
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+             <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><FontAwesomeIcon icon={faCamera} /> Foto da Fachada</h3>
+             
+             <div className="flex flex-col sm:flex-row gap-4 items-center">
+                <div className="w-full sm:w-48 h-32 bg-gray-200 rounded-lg overflow-hidden border border-gray-300 relative flex-shrink-0">
+                   {fotoAtualUrl ? (
+                      <>
+                        <img src={fotoAtualUrl} alt="Preview" className="w-full h-full object-cover" />
+                        <button 
+                          type="button" 
+                          onClick={removePhoto}
+                          className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition"
+                          title="Remover foto"
+                        >
+                          <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                      </>
+                   ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Sem foto</div>
+                   )}
+                </div>
+
+                <div className="flex-1 w-full">
+                   <label className="cursor-pointer flex items-center justify-center w-full h-12 border-2 border-dashed border-gray-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-gray-500 hover:text-indigo-600 font-bold text-sm gap-2">
+                      <FontAwesomeIcon icon={faPlus} />
+                      {fotoAtualUrl ? 'Trocar Foto' : 'Adicionar Foto'}
+                      <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                   </label>
+                   <p className="text-xs text-gray-400 mt-2 ml-1">Clique para selecionar uma nova imagem. A anterior será substituída.</p>
+                </div>
+             </div>
+          </div>
+
           <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
             <h3 className="font-bold text-indigo-700 mb-3 flex items-center gap-2"><FontAwesomeIcon icon={faUser} /> Pai</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -401,7 +474,6 @@ export default function AdminDashboard() {
     const matchMae = normalize(f.mae_nome).includes(term)
     const matchBairro = normalize(f.bairro).includes(term)
     const matchMoradia = normalize(f.tipo_moradia).includes(term)
-    
     const matchFilhos = f.filhos?.some((filho: any) => normalize(filho.nome).includes(term))
 
     return matchPai || matchMae || matchBairro || matchMoradia || matchFilhos

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid' 
 import Swal from 'sweetalert2' 
+import Link from 'next/link'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
@@ -19,7 +20,8 @@ import {
   faBriefcase,
   faGraduationCap,
   faTimes,
-  faMapMarkerAlt 
+  faMapMarkerAlt,
+  faLock
 } from '@fortawesome/free-solid-svg-icons'
 
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -217,7 +219,16 @@ export default function CheckinForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-slate-100 py-10 px-4 sm:px-6 relative">
+      
+      <Link href="/login" className="absolute top-6 right-6 z-20">
+        <button className="flex items-center gap-2 bg-white/80 backdrop-blur-sm text-indigo-600 px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:shadow-md hover:bg-white transition-all border border-indigo-100 group">
+          <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+             <FontAwesomeIcon icon={faLock} className="text-xs" />
+          </div>
+          <span className="hidden sm:inline">Login</span>
+        </button>
+      </Link>
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
         
         <div className="bg-gradient-to-r from-indigo-700 via-purple-700 to-blue-700 rounded-3xl p-8 text-center shadow-xl relative overflow-hidden">
