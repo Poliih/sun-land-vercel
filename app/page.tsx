@@ -170,7 +170,6 @@ export default function CheckinForm() {
         mae_telefone: formData.mae.telefone,
         mae_conjugal: formData.mae.conjugal,
         mae_mora: formData.mae.mora,
-        // LÓGICA: Se não mora, salva o endereço extra. Se mora, salva NULL.
         mae_endereco: !formData.mae.mora ? formData.mae.endereco_extra : null,
         mae_trabalha: formData.mae.trabalha,
         mae_profissao: formData.mae.trabalha ? formData.mae.profissao : null,
@@ -184,7 +183,7 @@ export default function CheckinForm() {
         foto_casa_url: fotoCasaUrl,
 
         filhos: formData.filhos,
-        observacoes: `Tipo Moradia: ${formData.endereco.tipo_moradia} \n ${formData.observacoes}` 
+        observacoes: `Tipo Moradia: ${formData.endereco.tipo_moradia} \n ${formData.endereco.tipo_moradia}` 
       }])
 
       if (error) throw error
