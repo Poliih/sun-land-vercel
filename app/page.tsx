@@ -33,7 +33,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY! 
 )
 
-const InputGroup = ({ label, type = "text", value, onChange, placeholder = "" }: any) => (
+const InputGroup = ({ label, type = "text", value, onChange, placeholder = "", disabled = false }: any) => (
   <div className="flex flex-col group animate-fadeIn w-full">
     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1 transition-colors group-focus-within:text-indigo-600">
       {label}
@@ -42,11 +42,24 @@ const InputGroup = ({ label, type = "text", value, onChange, placeholder = "" }:
       type={type} 
       value={value} 
       onChange={e => onChange(e.target.value)}
-      className="bg-gray-50 text-gray-900 text-sm rounded-xl block w-full p-3 border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-sm placeholder-gray-400"
+      disabled={disabled} 
+      className={`bg-gray-50 text-gray-900 text-sm rounded-xl block w-full p-3 border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-sm placeholder-gray-400 ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
       placeholder={placeholder}
     />
   </div>
 )
+
+const calcularIdade = (dataNasc: string) => {
+  if (!dataNasc) return ''
+  const hoje = new Date()
+  const nascimento = new Date(dataNasc)
+  let idade = hoje.getFullYear() - nascimento.getFullYear()
+  const m = hoje.getMonth() - nascimento.getMonth()
+  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+    idade--
+  }
+  return idade >= 0 ? idade.toString() : ''
+}
 
 const SelectGroup = ({ label, value, onChange, options }: any) => (
   <div className="flex flex-col group w-full">
@@ -123,6 +136,31 @@ export default function CheckinForm() {
   }
 
   const handleChange = (section: string, field: string, value: any, index?: number) => {
+    if (field === 'nasc') {
+       const idadeCalculada = calcularIdade(value)
+       
+       if (section === 'pai') {
+          setFormData(prev => ({
+             ...prev,
+             pai: { ...prev.pai, nasc: value, idade: idadeCalculada }
+          }))
+          return
+       }
+       if (section === 'mae') {
+          setFormData(prev => ({
+             ...prev,
+             mae: { ...prev.mae, nasc: value, idade: idadeCalculada }
+          }))
+          return
+       }
+       if (section === 'filhos' && index !== undefined) {
+          const novosFilhos = [...formData.filhos]
+          novosFilhos[index] = { ...novosFilhos[index], nasc: value, idade: idadeCalculada }
+          setFormData({ ...formData, filhos: novosFilhos })
+          return
+       }
+    }
+
     if (section === 'filhos' && index !== undefined) {
       const novosFilhos = [...formData.filhos]
       novosFilhos[index] = { ...novosFilhos[index], [field]: value }
@@ -253,7 +291,7 @@ export default function CheckinForm() {
             <InputGroup label="Nome Completo" value={formData.pai.nome} onChange={(v:any) => handleChange('pai', 'nome', v)} placeholder="Ex: João da Silva" />
             <div className="grid grid-cols-2 gap-3">
               <InputGroup label="Nascimento" type="date" value={formData.pai.nasc} onChange={(v:any) => handleChange('pai', 'nasc', v)} />
-              <InputGroup label="Idade" type="number" value={formData.pai.idade} onChange={(v:any) => handleChange('pai', 'idade', v)} />
+              <InputGroup label="Idade" type="number" value={formData.pai.idade} onChange={() => {}} disabled={true} placeholder="Auto" />
             </div>
             <InputGroup label="Telefone / WhatsApp" value={formData.pai.telefone} onChange={(v:any) => handleChange('pai', 'telefone', v)} placeholder="(00) 00000-0000" />
             <SelectGroup 
@@ -302,7 +340,7 @@ export default function CheckinForm() {
             <InputGroup label="Nome Completo" value={formData.mae.nome} onChange={(v:any) => handleChange('mae', 'nome', v)} placeholder="Ex: Maria da Silva" />
             <div className="grid grid-cols-2 gap-3">
               <InputGroup label="Nascimento" type="date" value={formData.mae.nasc} onChange={(v:any) => handleChange('mae', 'nasc', v)} />
-              <InputGroup label="Idade" type="number" value={formData.mae.idade} onChange={(v:any) => handleChange('mae', 'idade', v)} />
+              <InputGroup label="Idade" type="number" value={formData.mae.idade} onChange={() => {}} disabled={true} placeholder="Auto" />
             </div>
             <InputGroup label="Telefone / WhatsApp" value={formData.mae.telefone} onChange={(v:any) => handleChange('mae', 'telefone', v)} placeholder="(00) 00000-0000" />
             <SelectGroup 
@@ -451,7 +489,7 @@ export default function CheckinForm() {
                    <InputGroup label="Nome Completo" value={filho.nome} onChange={(v:any) => handleChange('filhos', 'nome', v, index)} />
                    <div className="grid grid-cols-2 gap-3">
                      <InputGroup label="Nascimento" type="date" value={filho.nasc} onChange={(v:any) => handleChange('filhos', 'nasc', v, index)} />
-                     <InputGroup label="Idade" type="number" value={filho.idade} onChange={(v:any) => handleChange('filhos', 'idade', v, index)} />
+                     <InputGroup label="Idade" type="number" value={filho.idade} onChange={() => {}} disabled={true} placeholder="Auto" />
                    </div>
                 </div>
 
